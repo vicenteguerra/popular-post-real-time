@@ -21,6 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 // Load plugin class files
 require_once(ABSPATH . 'wp-admin/includes/file.php');
+require_once( 'includes/class-google-analytics-api.php' );
 require_once( 'includes/class-popularpostrealtime.php' );
 require_once( 'includes/class-popularpostrealtime-settings.php' );
 
