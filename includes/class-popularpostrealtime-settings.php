@@ -53,13 +53,6 @@ class PopularPostRealTime_Settings {
 
 		// Add settings link to plugins page
 		add_filter( 'plugin_action_links_' . plugin_basename( $this->parent->file ) , array( $this, 'add_settings_link' ) );
-		add_filter('upload_mimes', 'mqw_mas_extensiones');
-		function mqw_mas_extensiones ( $existing_mimes=array() ) {
-			// Agregamos nuevas extensiones al array al lado de su MIME type:
-			$existing_mimes['p12'] = 'application/x-pkcs12 ';
-			//Agregamos las que necesitemos y luego retornamos el array
-			return $existing_mimes;
-		}
 
 	}
 
@@ -319,7 +312,6 @@ class PopularPostRealTime_Settings {
 					$html .= '<input name="Submit" type="submit" class="button-primary" value="' . esc_attr( __( 'Save Settings' , 'popularpostrealtime' ) ) . '" />' . "\n";
 				$html .= '</p>' . "\n";
 			$html .= '</form>' . "\n";
-			$html .= '<h3>Private Key</h3><form  method="post" enctype="multipart/form-data"><input type="file" id="upload_file" name="upload_file"></input><input type="submit" value="Upload" > </form>';
 		$html .= '</div>' . "\n";
 
 		echo $html;
