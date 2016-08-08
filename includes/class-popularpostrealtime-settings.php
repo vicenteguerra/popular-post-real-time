@@ -117,6 +117,7 @@ class PopularPostRealTime_Settings {
 		$client_id = get_option($this->base . "client_id"); // From the APIs console
 		$email = get_option($this->base . "email");
 		$account_id = get_option($this->base . "account_id");
+		$private_key =  get_option($this->base . "path_private_key");
 
 		if( file_exists($private_key) && $client_id && $email && $account_id){
 
