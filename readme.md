@@ -2,11 +2,11 @@
 
 Trendy post based in Google Analytics Real Time
 
-Author: Vicente Guerra (Yamblet for Sopitas.com)
+Author: Vicente Guerra
 
 Based in hlashbrooke wordpress plugin template
 
-Tags: wordpress, plugin, template, google, analytics, real time, api, most views, popular
+Tags: wordpress, plugin, template, google, trendy, analytics, real time, api, most views, popular
 
 Requires at least: 3.9
 
@@ -20,6 +20,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 
 **Description**
+
 
 Assign TrendyPostRT Category to most viewed post based in Google Analytics Real Time API.
 
@@ -40,3 +41,6 @@ Installing "PopularPostRealTime" can be done either by searching for "PopularPos
 = 1.0 =
 * 2016-08-07
 * Initial release
+
+
+(Yamblet for Sopitas.com)

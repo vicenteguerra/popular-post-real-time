@@ -141,7 +141,6 @@ class PopularPostRealTime_Settings {
 
 			// Set the default params. For example the start/end dates and max-results
 
-
 			$params = array(
 					'metrics' => 'rt:activeUsers',
 					'dimensions' => 'rt:pagePath',
@@ -151,7 +150,7 @@ class PopularPostRealTime_Settings {
 			$visits = $ga->query($params);
 			$des = json_encode($visits);
 		}else{
-			var_dump("No existe");
+			echo "No existe";
 		}
 
 		$settings['standard'] = array(

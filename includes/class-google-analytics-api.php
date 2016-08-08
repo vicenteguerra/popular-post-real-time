@@ -68,9 +68,7 @@ class GoogleAnalyticsAPI {
 		}
 		$this->auth = ($auth == 'web') ? new GoogleOauthWeb() : new GoogleOauthService();
 		$this->defaultQueryParams = array(
-			'start-date' => date('Y-m-d', strtotime('-1 month')),
-			'end-date' => date('Y-m-d'),
-			'metrics' => 'ga:visits',
+			'max-results' => 10
 		);
 
 	}
