@@ -114,12 +114,16 @@ class PopularPostRealTime_Settings {
 
 		$ga = new GoogleAnalyticsAPI('service');
 
-		$ga->auth->setClientId(get_option($this->base . "client_id")); // From the APIs console
-		$ga->auth->setEmail(get_option($this->base . "email")); // From the APIs console
+		$client_id = get_option($this->base . "client_id"); // From the APIs console
+		$email = get_option($this->base . "email");
+		$account_id = get_option($this->base . "account_id");
 
-		$private_key =  get_option($this->base . "path_private_key");
+		if( file_exists($private_key) && $client_id && $email && $account_id){
 
-		if(file_exists($private_key)){
+			$ga->auth->setClientId($client_id);
+			$ga->auth->setEmail($email); // From the APIs console
+			$private_key =  get_option($this->base . "path_private_key");
+
 			$ga->auth->setPrivateKey($private_key); // Path to the .p12 file
 			$auth = $ga->auth->getAccessToken();
 
@@ -137,7 +141,8 @@ class PopularPostRealTime_Settings {
 
 			// Set the accessToken and Account-Id
 			$ga->setAccessToken($accessToken);
-			$ga->setAccountId(get_option($this->base . "account_id")); // Replace with real Account ID (Use getAccountId function)
+
+			$ga->setAccountId($account_id); // Replace with real Account ID (Use getAccountId function)
 
 			// Set the default params. For example the start/end dates and max-results
 
