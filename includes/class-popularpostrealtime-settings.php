@@ -39,7 +39,7 @@ class PopularPostRealTime_Settings {
 	public function __construct ( $parent ) {
 		$this->parent = $parent;
 
-		$this->base = 'wpt_';
+		$this->base = 'pprt_';
 
 		// Initialise settings
 		add_action( 'init', array( $this, 'init_settings' ), 11 );
@@ -50,9 +50,20 @@ class PopularPostRealTime_Settings {
 		// Add settings page to menu
 		add_action( 'admin_menu' , array( $this, 'add_menu_item' ) );
 
+
 		// Add settings link to plugins page
 		add_filter( 'plugin_action_links_' . plugin_basename( $this->parent->file ) , array( $this, 'add_settings_link' ) );
+		add_filter('upload_mimes', 'mqw_mas_extensiones');
+		function mqw_mas_extensiones ( $existing_mimes=array() ) {
+			// Agregamos nuevas extensiones al array al lado de su MIME type:
+			$existing_mimes['p12'] = 'application/x-pkcs12 ';
+			//Agregamos las que necesitemos y luego retornamos el array
+			return $existing_mimes;
+		}
+
 	}
+
+
 
 	/**
 	 * Initialise settings
@@ -70,6 +81,7 @@ class PopularPostRealTime_Settings {
 		$page = add_options_page( __( 'Popular Post RT', 'popularpostrealtime' ) , __( 'Popular Post RT', 'popularpostrealtime' ) , 'manage_options' , $this->parent->_token . '_settings' ,  array( $this, 'settings_page' ) );
 		add_action( 'admin_print_styles-' . $page, array( $this, 'settings_assets' ) );
 	}
+
 
 	/**
 	 * Load settings JS & CSS
@@ -107,110 +119,83 @@ class PopularPostRealTime_Settings {
 	 */
 	private function settings_fields () {
 
+		$ga = new GoogleAnalyticsAPI('service');
+
+		$ga->auth->setClientId(get_option($this->base . "client_id")); // From the APIs console
+		$ga->auth->setEmail(get_option($this->base . "email")); // From the APIs console
+
+		$private_key =  get_option($this->base . "path_private_key");
+
+		if(file_exists($private_key)){
+			$ga->auth->setPrivateKey($private_key); // Path to the .p12 file
+			$auth = $ga->auth->getAccessToken();
+
+			// Try to get the AccessToken
+			if ($auth['http_code'] == 200) {
+					$accessToken = $auth['access_token'];
+					$tokenExpires = $auth['expires_in'];
+					$tokenCreated = time();
+			} else {
+					error_log("Problema al verificar el AccessToken de Google Analytics API" . PHP_EOL, 3, get_template_directory() ."/theme_log/error.log");
+			}
+
+			// Ejecutar para saber el Account ID
+			//getAccountId($ga,$accessToken);die;
+
+			// Set the accessToken and Account-Id
+			$ga->setAccessToken($accessToken);
+			$ga->setAccountId(get_option($this->base . "account_id")); // Replace with real Account ID (Use getAccountId function)
+
+			// Set the default params. For example the start/end dates and max-results
+
+
+			$params = array(
+					'metrics' => 'rt:activeUsers',
+					'dimensions' => 'rt:pagePath',
+					'sort' => '-rt:activeUsers',
+					'max-results' => 10
+			);
+			$visits = $ga->query($params);
+			$des = json_encode($visits);
+		}else{
+			var_dump("No existe");
+		}
+
 		$settings['standard'] = array(
 			'title'					=> __( 'Standard', 'popularpostrealtime' ),
-			'description'			=> __( 'These are fairly standard form input fields.', 'popularpostrealtime' ),
+			'description'			=> __( $des, 'popularpostrealtime' ),
 			'fields'				=> array(
 				array(
-					'id' 			=> 'text_field',
-					'label'			=> __( 'Some Text' , 'popularpostrealtime' ),
-					'description'	=> __( 'This is a standard text field.', 'popularpostrealtime' ),
+					'id' 			=> 'client_id',
+					'label'			=> __( 'Client ID' , 'popularpostrealtime' ),
+					'description'	=> __( 'From the Google APIs console', 'popularpostrealtime' ),
 					'type'			=> 'text',
 					'default'		=> '',
-					'placeholder'	=> __( 'Placeholder text', 'popularpostrealtime' )
+					'placeholder'	=> __( '', 'popularpostrealtime' )
 				),
 				array(
-					'id' 			=> 'password_field',
-					'label'			=> __( 'A Password' , 'popularpostrealtime' ),
-					'description'	=> __( 'This is a standard password field.', 'popularpostrealtime' ),
-					'type'			=> 'password',
+					'id' 			=> 'email',
+					'label'			=> __( 'Email' , 'popularpostrealtime' ),
+					'description'	=> __( 'From the APIs console (Google Service Account)', 'popularpostrealtime' ),
+					'type'			=> 'text',
 					'default'		=> '',
-					'placeholder'	=> __( 'Placeholder text', 'popularpostrealtime' )
+					'placeholder'	=> __( 'youraccount@example.iam.gserviceaccount.com', 'popularpostrealtime' )
 				),
 				array(
-					'id' 			=> 'secret_text_field',
-					'label'			=> __( 'Some Secret Text' , 'popularpostrealtime' ),
-					'description'	=> __( 'This is a secret text field - any data saved here will not be displayed after the page has reloaded, but it will be saved.', 'popularpostrealtime' ),
-					'type'			=> 'text_secret',
+					'id' 			=> 'account_id',
+					'label'			=> __( 'Account ID' , 'popularpostrealtime' ),
+					'description'	=> __( 'Google Analytics Account ID with format ga:xxxxxxxxx', 'popularpostrealtime' ),
+					'type'			=> 'text',
 					'default'		=> '',
-					'placeholder'	=> __( 'Placeholder text', 'popularpostrealtime' )
+					'placeholder'	=> __( 'ga:xxxxxxxxx', 'popularpostrealtime' )
 				),
 				array(
-					'id' 			=> 'text_block',
-					'label'			=> __( 'A Text Block' , 'popularpostrealtime' ),
-					'description'	=> __( 'This is a standard text area.', 'popularpostrealtime' ),
-					'type'			=> 'textarea',
-					'default'		=> '',
-					'placeholder'	=> __( 'Placeholder text for this textarea', 'popularpostrealtime' )
-				),
-				array(
-					'id' 			=> 'single_checkbox',
-					'label'			=> __( 'An Option', 'popularpostrealtime' ),
-					'description'	=> __( 'A standard checkbox - if you save this option as checked then it will store the option as \'on\', otherwise it will be an empty string.', 'popularpostrealtime' ),
-					'type'			=> 'checkbox',
-					'default'		=> ''
-				),
-				array(
-					'id' 			=> 'select_box',
-					'label'			=> __( 'A Select Box', 'popularpostrealtime' ),
-					'description'	=> __( 'A standard select box.', 'popularpostrealtime' ),
-					'type'			=> 'select',
-					'options'		=> array( 'drupal' => 'Drupal', 'joomla' => 'Joomla', 'wordpress' => 'WordPress' ),
-					'default'		=> 'wordpress'
-				),
-				array(
-					'id' 			=> 'radio_buttons',
-					'label'			=> __( 'Some Options', 'popularpostrealtime' ),
-					'description'	=> __( 'A standard set of radio buttons.', 'popularpostrealtime' ),
-					'type'			=> 'radio',
-					'options'		=> array( 'superman' => 'Superman', 'batman' => 'Batman', 'ironman' => 'Iron Man' ),
-					'default'		=> 'batman'
-				),
-				array(
-					'id' 			=> 'multiple_checkboxes',
-					'label'			=> __( 'Some Items', 'popularpostrealtime' ),
-					'description'	=> __( 'You can select multiple items and they will be stored as an array.', 'popularpostrealtime' ),
-					'type'			=> 'checkbox_multi',
-					'options'		=> array( 'square' => 'Square', 'circle' => 'Circle', 'rectangle' => 'Rectangle', 'triangle' => 'Triangle' ),
-					'default'		=> array( 'circle', 'triangle' )
-				)
-			)
-		);
-
-		$settings['extra'] = array(
-			'title'					=> __( 'Extra', 'popularpostrealtime' ),
-			'description'			=> __( 'These are some extra input fields that maybe aren\'t as common as the others.', 'popularpostrealtime' ),
-			'fields'				=> array(
-				array(
-					'id' 			=> 'number_field',
-					'label'			=> __( 'A Number' , 'popularpostrealtime' ),
-					'description'	=> __( 'This is a standard number field - if this field contains anything other than numbers then the form will not be submitted.', 'popularpostrealtime' ),
-					'type'			=> 'number',
-					'default'		=> '',
-					'placeholder'	=> __( '42', 'popularpostrealtime' )
-				),
-				array(
-					'id' 			=> 'colour_picker',
-					'label'			=> __( 'Pick a colour', 'popularpostrealtime' ),
-					'description'	=> __( 'This uses WordPress\' built-in colour picker - the option is stored as the colour\'s hex code.', 'popularpostrealtime' ),
-					'type'			=> 'color',
-					'default'		=> '#21759B'
-				),
-				array(
-					'id' 			=> 'an_image',
-					'label'			=> __( 'An Image' , 'popularpostrealtime' ),
-					'description'	=> __( 'This will upload an image to your media library and store the attachment ID in the option field. Once you have uploaded an imge the thumbnail will display above these buttons.', 'popularpostrealtime' ),
-					'type'			=> 'image',
-					'default'		=> '',
-					'placeholder'	=> ''
-				),
-				array(
-					'id' 			=> 'multi_select_box',
-					'label'			=> __( 'A Multi-Select Box', 'popularpostrealtime' ),
-					'description'	=> __( 'A standard multi-select box - the saved data is stored as an array.', 'popularpostrealtime' ),
-					'type'			=> 'select_multi',
-					'options'		=> array( 'linux' => 'Linux', 'mac' => 'Mac', 'windows' => 'Windows' ),
-					'default'		=> array( 'linux' )
+					'id' 			=> 'path_private_key',
+					'label'			=> __( 'Path Private Key' , 'popularpostrealtime' ),
+					'description'	=> __( '.p12 file from Google Service Account ', 'popularpostrealtime' ),
+					'type'			=> 'text',
+					'default'		=> $_SERVER['HOME'] . "/.ssh/google_key.p12",
+					'placeholder'	=> __( 'full/path/example.p12', 'popularpostrealtime' )
 				)
 			)
 		);
@@ -326,6 +311,7 @@ class PopularPostRealTime_Settings {
 				ob_start();
 				settings_fields( $this->parent->_token . '_settings' );
 				do_settings_sections( $this->parent->_token . '_settings' );
+				$this->register_uploaded_file();
 				$html .= ob_get_clean();
 
 				$html .= '<p class="submit">' . "\n";
@@ -333,10 +319,34 @@ class PopularPostRealTime_Settings {
 					$html .= '<input name="Submit" type="submit" class="button-primary" value="' . esc_attr( __( 'Save Settings' , 'popularpostrealtime' ) ) . '" />' . "\n";
 				$html .= '</p>' . "\n";
 			$html .= '</form>' . "\n";
+			$html .= '<h3>Private Key</h3><form  method="post" enctype="multipart/form-data"><input type="file" id="upload_file" name="upload_file"></input><input type="submit" value="Upload" > </form>';
 		$html .= '</div>' . "\n";
 
 		echo $html;
 	}
+
+	public function register_uploaded_file(){
+	        // First check if the file appears on the _FILES array
+	        if(isset($_FILES['upload_file'])){
+	                $pdf = $_FILES['upload_file'];
+
+	                // Use the wordpress function to upload
+	                // test_upload_pdf corresponds to the position in the $_FILES array
+	                // 0 means the content is not associated with any other posts
+	                $uploaded=media_handle_upload('upload_file', 0);
+	                // Error checking using WP functions
+	                if(is_wp_error($uploaded)){
+                      echo "Error uploading file: " . $uploaded->get_error_message();
+	                }else{
+										  $path =  get_attached_file($uploaded);
+											echo '<p id="_path_private_key">' . $path . "</p><br>";
+                      echo "Key upload successful!, don´t forget save your settings";
+	                }
+	        }
+	}
+
+
+
 
 	/**
 	 * Main PopularPostRealTime_Settings Instance

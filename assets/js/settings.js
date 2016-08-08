@@ -1,5 +1,12 @@
 jQuery(document).ready(function($) {
 
+    console.log("Entro aqui :)");
+
+    if( '' !== $('#_path_private_key').text() ){
+      console.log("ASDFG");
+      $('#path_private_key').val($('#_path_private_key').text());
+    }
+
     /***** Colour picker *****/
 
     $('.colorpicker').hide();
