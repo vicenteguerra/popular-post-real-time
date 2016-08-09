@@ -36,6 +36,10 @@ class PopularPostRealTime_Settings {
 	 */
 	public $settings = array();
 
+	public 	$slug_popular_rt_cat = "popular_real_time_cat";
+	public 	$category_name = "Popular RT";
+	public	$description = "Category used for displat Popular Post (Google Analytics Real Time)";
+
 	public function __construct ( $parent ) {
 		$this->parent = $parent;
 
@@ -106,6 +110,47 @@ class PopularPostRealTime_Settings {
   		return $links;
 	}
 
+	function clearCategory(){
+		$cat = get_category_by_slug( $this->slug_popular_rt_cat );
+		if($cat){
+			$id_popular_rt_cat = $cat->cat_ID;
+			$args = array( 'category' => $id_popular_rt_cat  );
+			$popular_posts = get_posts( $args );
+			foreach ($popular_posts as $current_post) {
+				$post_id = $current_post->ID;
+				$post_categories = wp_get_post_categories( $post_id );
+				if(($key = array_search($id_popular_rt_cat, $post_categories)) !== false) {
+					unset($post_categories[$key]);
+				}
+				wp_set_post_categories( $post_id, $post_categories, false );
+			}
+		} // end if
+	}
+
+	function setPopularPost($page_path, $active_users){
+		if("/" == $page_path){
+			return 0;
+		}
+		$post_id = url_to_postid($page_path);
+		if($post_id){
+			$meta_key = "active_users";
+			update_post_meta($post_id, $meta_key, $active_users);
+
+			$cat = get_category_by_slug( $this->slug_popular_rt_cat );
+			if(!$cat){
+				wp_insert_term($this->category_name, 'category', array(
+					'description'=>$this->description,
+					'slug'=>sanitize_title($this->slug_popular_rt_cat),
+					'parent'=> 0
+				));
+				$cat = get_category_by_slug( $this->slug_popular_rt_cat );
+			}
+
+			$id_popular_rt_cat = $cat->cat_ID;
+			wp_set_post_categories( $post_id, $id_popular_rt_cat, true ); // Append Popular RT Category to Post
+		} // end if
+	}
+
 	/**
 	 * Build settings fields
 	 * @return array Fields to be displayed on settings page
@@ -133,35 +178,38 @@ class PopularPostRealTime_Settings {
 					$accessToken = $auth['access_token'];
 					$tokenExpires = $auth['expires_in'];
 					$tokenCreated = time();
+
+					// Ejecutar para saber el Account ID
+					//getAccountId($ga,$accessToken);die;
+					$ga->setAccessToken($accessToken);
+					$ga->setAccountId($account_id); // Replace with real Account ID (Use getAccountId function)
+
+					$params = array(
+							'metrics' => 'rt:activeUsers',
+							'dimensions' => 'rt:pagePath',
+							'sort' => '-rt:activeUsers',
+							'max-results' => 10
+					);
+					$popular_posts = $ga->query($params);
+					$status = json_encode($popular_posts);
+
+					foreach ($popular_posts['rows'] as $popular ) {
+						$page_path = $popular[0];
+						$active_users = $popular[1];
+						$this->setPopularPost($page_path, $active_users);
+					}
 			} else {
-					error_log("Problema al verificar el AccessToken de Google Analytics API" . PHP_EOL, 3, get_template_directory() ."/theme_log/error.log");
+				  $status = "Error with Google Analytics API AccessToken";
+					//error_log("Problema al verificar el AccessToken de Google Analytics API" . PHP_EOL, 3, get_template_directory() ."/theme_log/error.log");
 			}
-
-			// Ejecutar para saber el Account ID
-			//getAccountId($ga,$accessToken);die;
-
-			// Set the accessToken and Account-Id
-			$ga->setAccessToken($accessToken);
-
-			$ga->setAccountId($account_id); // Replace with real Account ID (Use getAccountId function)
-
-			// Set the default params. For example the start/end dates and max-results
-
-			$params = array(
-					'metrics' => 'rt:activeUsers',
-					'dimensions' => 'rt:pagePath',
-					'sort' => '-rt:activeUsers',
-					'max-results' => 10
-			);
-			$visits = $ga->query($params);
-			$des = json_encode($visits);
 		}else{
-			echo "No existe";
+			$status = "First config your Google API credentials";
 		}
 
-		$settings['standard'] = array(
-			'title'					=> __( 'Standard', 'popularpostrealtime' ),
-			'description'			=> __( $des, 'popularpostrealtime' ),
+
+		$settings['settings'] = array(
+			'title'					=> __( 'Settings', 'popularpostrealtime' ),
+			'description'			=> __( $status, 'popularpostrealtime' ),
 			'fields'				=> array(
 				array(
 					'id' 			=> 'client_id',

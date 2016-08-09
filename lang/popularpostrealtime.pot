@@ -380,9 +380,14 @@ msgstr ""
 msgid "All"
 msgstr ""
 
-#: includes/class-popularpostrealtime-settings.php:427
+#: includes/class-popularpostrealtime-settings.php:313
 msgid "Save Settings"
-msgstr ""
+msgstr "Guardar cambios"
+
+#: includes/class-popularpostrealtime-settings.php:166
+msgid "From the Google APIs console"
+msgstr "De la consola de Google APIs"
+
 
 #: includes/class-popularpostrealtime-settings.php:458
 #: includes/class-popularpostrealtime-settings.php:467
