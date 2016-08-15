@@ -272,4 +272,6 @@ class PopularPostRealTime {
 		update_option( $this->_token . '_version', $this->_version );
 	} // End _log_version_number ()
 
+
+
 }

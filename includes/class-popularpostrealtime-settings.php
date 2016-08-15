@@ -36,10 +36,6 @@ class PopularPostRealTime_Settings {
 	 */
 	public $settings = array();
 
-	public 	$slug_popular_rt_cat = "popular_real_time_cat";
-	public 	$category_name = "Popular RT";
-	public	$description = "Category used for displat Popular Post (Google Analytics Real Time)";
-
 	public function __construct ( $parent ) {
 		$this->parent = $parent;
 
@@ -117,6 +113,7 @@ class PopularPostRealTime_Settings {
 	 * @return array Fields to be displayed on settings page
 	 */
 	private function settings_fields () {
+
 
 		$settings['settings'] = array(
 			'title'					=> __( 'Settings', 'popularpostrealtime' ),
