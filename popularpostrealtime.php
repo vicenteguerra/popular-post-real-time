@@ -57,8 +57,8 @@ function PopularPostRealTime () {
 PopularPostRealTime();
 
 function add_cs_cron_fn( $schedules ) {
-	$period = 30;
-	return array('30seconds' => array( 'interval' => $period, 'display' => 'Every 30 seconds' ));
+	$period = 10*60;
+	return array('10minutes' => array( 'interval' => $period, 'display' => 'Every 10 minutes' ));
 } // end add_cs_cron_fn()
 
 add_filter('cron_schedules', 'add_cs_cron_fn' );
@@ -68,10 +68,10 @@ register_activation_hook( __FILE__, 'run_on_activate' );
 function run_on_activate() {
 	// for notifications
 	if( !wp_next_scheduled( 'scheduler_say_hello' ) ) {
-		wp_schedule_event( time(), '30seconds', 'scheduler_say_hello' );
+		wp_schedule_event( time(), '10minutes', 'scheduler_say_hello' );
 	} // for expirations
 	if( !wp_next_scheduled( 'scheduler_c_popular_rt' ) ) {
-		wp_schedule_event( time(), '30seconds', 'scheduler_c_popular_rt' );
+		wp_schedule_event( time(), '10minutes', 'scheduler_c_popular_rt' );
 	}
 } // end run_on_activate()
 
