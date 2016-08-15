@@ -84,7 +84,6 @@ function say_hello(){
 }
 
 function c_popular_rt() {
-	mylog("entro a popular rt");
 	$base = 'pprt_';
 
 	$ga = new GoogleAnalyticsAPI('service');
