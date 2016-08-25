@@ -153,16 +153,16 @@ function c_popular_rt() {
 			$status = "Error with Google Analytics API AccessToken";
 			mylog("error");
 	}
-	mylog($status);
 }
 
 
 function clearCategory(){
-	mylog("Clear");
+	$slug_popular_rt_cat = "popular_real_time_cat";
 	$cat = get_category_by_slug( $slug_popular_rt_cat );
 	if($cat){
 		$id_popular_rt_cat = $cat->cat_ID;
-		$args = array( 'category' => $id_popular_rt_cat  );
+		$args = array(  'category' => $id_popular_rt_cat,
+										'posts_per_page' => -1  );
 		$popular_posts = get_posts( $args );
 		foreach ($popular_posts as $current_post) {
 			$post_id = $current_post->ID;
@@ -171,7 +171,6 @@ function clearCategory(){
 				unset($post_categories[$key]);
 			}
 			wp_set_post_categories( $post_id, $post_categories, false );
-			mylog("Cleaned");
 		}
 	} // end if
 }
@@ -193,7 +192,7 @@ function setPopularPost($page_path, $active_users){
 		$cat = get_category_by_slug( $slug_popular_rt_cat );
 		if(!$cat){
 			wp_insert_term($category_name, 'category', array(
-				'description'=>$description,
+				'description' =>$description,
 				'slug'=>sanitize_title($slug_popular_rt_cat),
 				'parent'=> 0
 			));
