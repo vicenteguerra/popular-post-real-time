@@ -66,22 +66,14 @@ add_filter('cron_schedules', 'add_cs_cron_fn' );
 register_activation_hook( __FILE__, 'run_on_activate' );
 
 function run_on_activate() {
-	// for notifications
-	if( !wp_next_scheduled( 'scheduler_say_hello' ) ) {
-		wp_schedule_event( time(), '10minutes', 'scheduler_say_hello' );
-	} // for expirations
+	// for notification
 	if( !wp_next_scheduled( 'scheduler_c_popular_rt' ) ) {
 		wp_schedule_event( time(), '10minutes', 'scheduler_c_popular_rt' );
 	}
 } // end run_on_activate()
 
 // add an action hook for expiration check and notification check
-add_action ('scheduler_say_hello', 'say_hello' );
 add_action ('scheduler_c_popular_rt',  'c_popular_rt' );
-
-function say_hello(){
-	mylog("Yes!, Hello :)");
-}
 
 function c_popular_rt() {
 	$base = 'pprt_';
