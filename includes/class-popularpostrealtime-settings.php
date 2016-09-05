@@ -122,7 +122,7 @@ class PopularPostRealTime_Settings {
 				array(
 					'id' 			=> 'client_id',
 					'label'			=> __( 'Client ID' , 'popularpostrealtime' ),
-					'description'	=> __( 'From the Google APIs console', 'popularpostrealtime' ),
+					'description'	=> __( '<a target="_blank" href="https://console.developers.google.com/apis/credentials"> From the Google APIs console</a>', 'popularpostrealtime' ),
 					'type'			=> 'text',
 					'default'		=> '',
 					'placeholder'	=> __( '', 'popularpostrealtime' )
@@ -130,15 +130,15 @@ class PopularPostRealTime_Settings {
 				array(
 					'id' 			=> 'email',
 					'label'			=> __( 'Email' , 'popularpostrealtime' ),
-					'description'	=> __( 'From the APIs console (Google Service Account)', 'popularpostrealtime' ),
+					'description'	=> __( '<a target="_blank" href="https://console.cloud.google.com/iam-admin/serviceaccounts/serviceaccounts-zero">From the APIs console (Google Service Account) </a>', 'popularpostrealtime' ),
 					'type'			=> 'text',
 					'default'		=> '',
-					'placeholder'	=> __( 'youraccount@example.iam.gserviceaccount.com', 'popularpostrealtime' )
+					'placeholder'	=> __( 'youraccount@s.iam.gserviceaccount.com', 'popularpostrealtime' )
 				),
 				array(
 					'id' 			=> 'account_id',
 					'label'			=> __( 'Account ID' , 'popularpostrealtime' ),
-					'description'	=> __( 'Google Analytics Account ID with format ga:xxxxxxxxx', 'popularpostrealtime' ),
+					'description'	=> __( '<a id="get_account_id">Get Account ID</a> /  Google Analytics Account ID with format ga:xxxxxxxxx  ', 'popularpostrealtime' ),
 					'type'			=> 'text',
 					'default'		=> '',
 					'placeholder'	=> __( 'ga:xxxxxxxxx', 'popularpostrealtime' )
@@ -146,10 +146,18 @@ class PopularPostRealTime_Settings {
 				array(
 					'id' 			=> 'path_private_key',
 					'label'			=> __( 'Path Private Key' , 'popularpostrealtime' ),
-					'description'	=> __( '.p12 file from Google Service Account ', 'popularpostrealtime' ),
+					'description'	=> __( '<a target="_blank" href="https://console.developers.google.com/iam-admin/serviceaccounts/project" > .p12 file from Google Service Account </a> Options -> Create Key -> Create Private Key (P12) -> Create (Download) -> Upload to your Server', 'popularpostrealtime' ),
 					'type'			=> 'text',
 					'default'		=> $_SERVER['HOME'] . "/.ssh/google_key.p12",
 					'placeholder'	=> __( 'full/path/example.p12', 'popularpostrealtime' )
+				),
+				array(
+					'id' 			=> 'popular_posts_number',
+					'label'			=> __( 'Number of Popular Posts' , 'popularpostrealtime' ),
+					'description'	=> __( 'Number of Popular Posts that you need (Put 4 or 5 more, because Google Analytics also include the home ( / ) and other popular routes)', 'popularpostrealtime' ),
+					'type'			=> 'text',
+					'default'		=> 10,
+					'placeholder'	=> __( '10', 'popularpostrealtime' )
 				)
 			)
 		);
@@ -273,6 +281,12 @@ class PopularPostRealTime_Settings {
 					$html .= '<input name="Submit" type="submit" class="button-primary" value="' . esc_attr( __( 'Save Settings' , 'popularpostrealtime' ) ) . '" />' . "\n";
 				$html .= '</p>' . "\n";
 			$html .= '</form>' . "\n";
+		$html .= '</div>' . "\n";
+		$html .= '<div>' . "\n";
+		$html .= '<p>Get your Account ID (You Only need first set your Client ID, Email and Private Key)</p>' . "\n";
+		$html .= '<strong id="account_id_msg"></strong>';
+		$html .= '<p>Test your configuration: <a id="test_popular_post">Click here for Connect to Google Analytics</a></p>' . "\n";
+		$html .= '<div id="show_test_popular_post"></div>';
 		$html .= '</div>' . "\n";
 
 		echo $html;

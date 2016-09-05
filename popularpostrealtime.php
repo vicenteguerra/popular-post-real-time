@@ -84,6 +84,7 @@ function c_popular_rt() {
 	$email = get_option($base . "email");
 	$account_id = get_option($base . "account_id");
 	$private_key =  get_option($base . "path_private_key");
+	$number_popular_post = get_option($base . "popular_posts_number");
 
 	if(!$client_id){
 		mylog("No existe client id");
@@ -104,7 +105,6 @@ function c_popular_rt() {
 
 	$ga->auth->setClientId($client_id);
 	$ga->auth->setEmail($email); // From the APIs console
-	$private_key =  get_option($base . "path_private_key");
 
 	$ga->auth->setPrivateKey($private_key); // Path to the .p12 file
 	$auth = $ga->auth->getAccessToken();
@@ -116,16 +116,14 @@ function c_popular_rt() {
 			$tokenExpires = $auth['expires_in'];
 			$tokenCreated = time();
 
-			// Ejecutar para saber el Account ID
-			//getAccountId($ga,$accessToken);die;
 			$ga->setAccessToken($accessToken);
-			$ga->setAccountId($account_id); // Replace with real Account ID (Use getAccountId function)
+			$ga->setAccountId($account_id);
 
 			$params = array(
 					'metrics' => 'rt:activeUsers',
 					'dimensions' => 'rt:pagePath',
 					'sort' => '-rt:activeUsers',
-					'max-results' => 10
+					'max-results' => $number_popular_post
 			);
 			$popular_posts = $ga->query($params);
 			$status = json_encode($popular_posts);
@@ -139,11 +137,12 @@ function c_popular_rt() {
 				}
 			}else{
 				$status = "Error using Google Analytics";
+				mylog($status);
 			}
 
 	} else {
 			$status = "Error with Google Analytics API AccessToken";
-			mylog("error");
+			mylog($status);
 	}
 }
 
@@ -168,7 +167,6 @@ function clearCategory(){
 }
 
 function setPopularPost($page_path, $active_users){
-	mylog("Set Popular");
 	$slug_popular_rt_cat = "popular_real_time_cat";
 	$category_name = "Popular RT";
 	$description = "Category used for displat Popular Post (Google Analytics Real Time)";
@@ -197,3 +195,172 @@ function setPopularPost($page_path, $active_users){
 }
 
 register_deactivation_hook( __FILE__, 'run_on_deactivate' );
+
+
+add_action( 'admin_footer', 'get_account_id' );
+
+function get_account_id() { ?>
+	<script type="text/javascript" >
+	jQuery(document).ready(function($) {
+
+		$('#get_account_id').click(function(){
+			$('#account_id_msg').text("Processing");
+			var data = {
+				'action': 'get_account_id_action'
+			};
+			jQuery.post(ajaxurl, data, function(response) {
+				$('#account_id_msg').html(response);
+			});
+		});
+
+		$('#test_popular_post').click(function(){
+			$('#show_test_popular_post').text("Processing");
+			var data = {
+				'action': 'test_popular_post_action'
+			};
+			jQuery.post(ajaxurl, data, function(response) {
+				$('#show_test_popular_post').html(response);
+			});
+		});
+
+	});
+	</script> <?php
+}
+
+add_action( 'wp_ajax_get_account_id_action', 'get_account_id_action_callback' );
+add_action( 'wp_ajax_test_popular_post_action', 'test_popular_post_action_callback' );
+
+function test_popular_post_action_callback(){
+	$base = 'pprt_';
+
+	$ga = new GoogleAnalyticsAPI('service');
+
+	$client_id = get_option($base . "client_id"); // From the APIs console
+	$email = get_option($base . "email");
+	$account_id = get_option($base . "account_id");
+	$private_key =  get_option($base . "path_private_key");
+	$number_popular_post = get_option($base . "popular_posts_number");
+
+	if(!$client_id){
+		$msg ="Please set your Client ID";
+		echo $msg; wp_die();
+	}
+	if(!$email){
+		$msg = "Please set Your Google Account Email";
+		echo $msg; wp_die();
+	}
+
+	if(!file_exists($private_key)){
+		$msg = "Problem with your Private Key File";
+		echo $msg; wp_die();
+	}
+	if(!file_exists($private_key)){
+		$msg = "No carga private key";
+		echo $msg; wp_die();
+	}
+
+	$ga->auth->setClientId($client_id);
+	$ga->auth->setEmail($email); // From the APIs console
+
+	$ga->auth->setPrivateKey($private_key); // Path to the .p12 file
+	$auth = $ga->auth->getAccessToken();
+
+	// Try to get the AccessToken
+	if ($auth['http_code'] == 200) {
+			$status = "HTTP OK";
+			$accessToken = $auth['access_token'];
+			$tokenExpires = $auth['expires_in'];
+			$tokenCreated = time();
+
+			$ga->setAccessToken($accessToken);
+			$ga->setAccountId($account_id);
+
+			$params = array(
+					'metrics' => 'rt:activeUsers',
+					'dimensions' => 'rt:pagePath',
+					'sort' => '-rt:activeUsers',
+					'max-results' => $number_popular_post
+			);
+			$popular_posts = $ga->query($params);
+			$status = json_encode($popular_posts);
+
+			if(isset($popular_posts['rows'])){
+				$html = "<table> <tr> <th>Path</th> <th>Active Users</th> </tr>";
+				foreach ($popular_posts['rows'] as $popular ) {
+					$page_path = $popular[0];
+					$active_users = $popular[1];
+					$html .= "<tr> <td>{$page_path}</td> <td>{$active_users}</td></tr>";
+				}
+				$html .= "</table>";
+				echo $html;
+				wp_die();
+			}else{
+				$status = "Error using Google Analytics";
+				echo $status;
+				wp_die();
+			}
+
+	} else {
+			$status = "Error with Google Analytics API AccessToken";
+			echo $status; wp_die();
+	}
+
+}
+
+function get_account_id_action_callback() {
+	global $wpdb; // this is how you get access to the database
+
+	$whatever = intval( $_POST['whatever'] );
+
+	$base = 'pprt_';
+
+	$ga = new GoogleAnalyticsAPI('service');
+
+	$client_id = get_option($base . "client_id"); // From the APIs console
+	$email = get_option($base . "email");
+	$private_key =  get_option($base . "path_private_key");
+
+	if(!$client_id){
+		$msg ="Please set your Client ID";
+		mylog($msg);
+		echo $msg; wp_die();
+	}
+	if(!$email){
+		$msg = "Please set Your Google Account Email";
+		mylog($msg);
+		echo $msg; wp_die();
+	}
+
+	if(!file_exists($private_key)){
+		$msg = "Problem with your Private Key File";
+		mylog($msg);
+		echo $msg; wp_die();
+	}
+
+	$ga->auth->setClientId($client_id);
+	$ga->auth->setEmail($email); // From the APIs console
+	$ga->auth->setPrivateKey($private_key);
+
+	$auth = $ga->auth->getAccessToken();
+
+	if ($auth['http_code'] == 200) {
+			$status = "HTTP OK";
+			$accessToken = $auth['access_token'];
+			$ga->setAccessToken($accessToken);
+			$ga->setAccountId('ga:xxxxxxx');
+
+			// Load profiles
+			$profiles = $ga->getProfiles();
+			foreach ($profiles['items'] as $item) {
+					if(isset($item['id'])){
+						$id = "ga:{$item['id']}";
+						echo $id . "   Info:  ";
+						$name = $item['name'];
+						echo $name . "<br>";
+					}
+			}
+	}
+
+	echo "Error";
+	wp_die(); // this is required to terminate immediately and return a proper response
+}
