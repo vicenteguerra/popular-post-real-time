@@ -37,7 +37,7 @@ require_once( 'includes/lib/class-popularpostrealtime-admin-api.php' );
  * @return object PopularPostRealTime
  */
 
-function mylog($msg){
+function pprt_write_log($msg){
 	$logfile = plugin_dir_path( __FILE__ ) . '/log.txt';
 	$actual = file_get_contents($logfile);
 	$actual .= $msg . "\n";
@@ -56,26 +56,33 @@ function PopularPostRealTime () {
 
 PopularPostRealTime();
 
-function add_cs_cron_fn( $schedules ) {
+function pprt_add_cs_cron_fn( $schedules ) {
 	$period = 10*60;
 	return array('10minutes' => array( 'interval' => $period, 'display' => 'Every 10 minutes' ));
 } // end add_cs_cron_fn()
 
-add_filter('cron_schedules', 'add_cs_cron_fn' );
+add_filter('cron_schedules', 'pprt_add_cs_cron_fn' );
 
-register_activation_hook( __FILE__, 'run_on_activate' );
+register_activation_hook( __FILE__, 'pprt_run_on_activate' );
+register_deactivation_hook( __FILE__, 'pprt_run_on_deactivate' );
 
-function run_on_activate() {
+function pprt_run_on_activate() {
 	// for notification
-	if( !wp_next_scheduled( 'scheduler_c_popular_rt' ) ) {
-		wp_schedule_event( time(), '10minutes', 'scheduler_c_popular_rt' );
+	if( !wp_next_scheduled( 'scheduler_pprt_get_popular' ) ) {
+		wp_schedule_event( time(), '10minutes', 'scheduler_pprt_get_popular' );
 	}
 } // end run_on_activate()
 
-// add an action hook for expiration check and notification check
-add_action ('scheduler_c_popular_rt',  'c_popular_rt' );
+function pprt_run_on_deactivate(){
+	if( wp_next_scheduled( 'scheduler_pprt_get_popular' ) ) {
+		wp_clear_scheduled_hook( 'scheduler_pprt_get_popular' );
+	}
+}
 
-function c_popular_rt() {
+// add an action hook for expiration check and notification check
+add_action ('scheduler_pprt_get_popular',  'pprt_getPopular' );
+
+function pprt_getPopular() {
 	$base = 'pprt_';
 
 	$ga = new GoogleAnalyticsAPI('service');
@@ -87,19 +94,19 @@ function c_popular_rt() {
 	$number_popular_post = get_option($base . "popular_posts_number");
 
 	if(!$client_id){
-		mylog("No existe client id");
+		pprt_write_log("No existe client id");
 		return 0;
 	}
 	if(!$email){
-		mylog("No hay email");
+		pprt_write_log("No hay email");
 		return 0;
 	}
 	if(!$account_id){
-		mylog("No hay Account id");
+		pprt_write_log("No hay Account id");
 		return 0;
 	}
 	if(!file_exists($private_key)){
-		mylog("No carga private key");
+		pprt_write_log("No carga private key");
 		return 0;
 	}
 
@@ -129,25 +136,25 @@ function c_popular_rt() {
 			$status = json_encode($popular_posts);
 
 			if(isset($popular_posts['rows'])){
-				clearCategory();
+				pprt_clearCategory();
 				foreach ($popular_posts['rows'] as $popular ) {
 					$page_path = $popular[0];
 					$active_users = $popular[1];
-					setPopularPost($page_path, $active_users);
+					pprt_setPopularPost($page_path, $active_users);
 				}
 			}else{
 				$status = "Error using Google Analytics";
-				mylog($status);
+				pprt_write_log($status);
 			}
 
 	} else {
 			$status = "Error with Google Analytics API AccessToken";
-			mylog($status);
+			pprt_write_log($status);
 	}
 }
 
 
-function clearCategory(){
+function pprt_clearCategory(){
 	$slug_popular_rt_cat = "popular_real_time_cat";
 	$cat = get_category_by_slug( $slug_popular_rt_cat );
 	if($cat){
@@ -166,7 +173,7 @@ function clearCategory(){
 	} // end if
 }
 
-function setPopularPost($page_path, $active_users){
+function pprt_setPopularPost($page_path, $active_users){
 	$slug_popular_rt_cat = "popular_real_time_cat";
 	$category_name = "Popular RT";
 	$description = "Category used for displat Popular Post (Google Analytics Real Time)";
@@ -194,19 +201,16 @@ function setPopularPost($page_path, $active_users){
 	} // end if
 }
 
-register_deactivation_hook( __FILE__, 'run_on_deactivate' );
+add_action( 'admin_footer', 'pprt_get_account_id' );
 
-
-add_action( 'admin_footer', 'get_account_id' );
-
-function get_account_id() { ?>
+function pprt_get_account_id() { ?>
 	<script type="text/javascript" >
 	jQuery(document).ready(function($) {
 
 		$('#get_account_id').click(function(){
 			$('#account_id_msg').text("Processing");
 			var data = {
-				'action': 'get_account_id_action'
+				'action': 'pprt_get_account_id_action'
 			};
 			jQuery.post(ajaxurl, data, function(response) {
 				$('#account_id_msg').html(response);
@@ -216,7 +220,7 @@ function get_account_id() { ?>
 		$('#test_popular_post').click(function(){
 			$('#show_test_popular_post').text("Processing");
 			var data = {
-				'action': 'test_popular_post_action'
+				'action': 'pprt_test_popular_post_action'
 			};
 			jQuery.post(ajaxurl, data, function(response) {
 				$('#show_test_popular_post').html(response);
@@ -227,10 +231,10 @@ function get_account_id() { ?>
 	</script> <?php
 }
 
-add_action( 'wp_ajax_get_account_id_action', 'get_account_id_action_callback' );
-add_action( 'wp_ajax_test_popular_post_action', 'test_popular_post_action_callback' );
+add_action( 'wp_ajax_pprt_get_account_id_action', 'pprt_get_account_id_action_callback' );
+add_action( 'wp_ajax_pprt_test_popular_post_action', 'pprt_test_popular_post_action_callback' );
 
-function test_popular_post_action_callback(){
+function pprt_test_popular_post_action_callback(){
 	$base = 'pprt_';
 
 	$ga = new GoogleAnalyticsAPI('service');
@@ -307,7 +311,7 @@ function test_popular_post_action_callback(){
 
 }
 
-function get_account_id_action_callback() {
+function pprt_get_account_id_action_callback() {
 	global $wpdb; // this is how you get access to the database
 
 	$whatever = intval( $_POST['whatever'] );
@@ -322,18 +326,18 @@ function get_account_id_action_callback() {
 
 	if(!$client_id){
 		$msg ="Please set your Client ID";
-		mylog($msg);
+		pprt_write_log($msg);
 		echo $msg; wp_die();
 	}
 	if(!$email){
 		$msg = "Please set Your Google Account Email";
-		mylog($msg);
+		pprt_write_log($msg);
 		echo $msg; wp_die();
 	}
 
 	if(!file_exists($private_key)){
 		$msg = "Problem with your Private Key File";
-		mylog($msg);
+		pprt_write_log($msg);
 		echo $msg; wp_die();
 	}
 
