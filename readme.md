@@ -47,3 +47,8 @@ Request Authorization for use [Google Analytics Real Time API](https://docs.goog
 = 1.0 =
 * 2016-09-11
 * Initial release
+
+## Support on Beerpay
+Hey dude! Help me out for a couple of :beers:!
+
+[![Beerpay](https://beerpay.io/vicenteguerra/popular-post-real-time/badge.svg?style=beer-square)](https://beerpay.io/vicenteguerra/popular-post-real-time)  [![Beerpay](https://beerpay.io/vicenteguerra/popular-post-real-time/make-wish.svg?style=flat-square)](https://beerpay.io/vicenteguerra/popular-post-real-time?focus=wish)
